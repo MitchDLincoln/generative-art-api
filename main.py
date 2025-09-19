@@ -1,8 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, status 
 from typing import List
 
 # Importiamo il nostro nuovo modello dal file models.py
-from models import Creation
+from models import Creation, CreationCreate
 
 # 1. Importa il middleware CORS
 from fastapi.middleware.cors import CORSMiddleware
@@ -46,3 +46,20 @@ def get_creations():
     Restituisce la lista di tutte le creazioni artistiche.
     """
     return db_creations
+
+@app.post("/api/creations", response_model=Creation, status_code=status.HTTP_201_CREATED)
+def create_creation(creation_data: CreationCreate):
+    """
+    Crea una nuova opera d'arte e la aggiunge al database (finto).
+    """
+    # 1. Calcola il nuovo ID (in un DB reale, questo è automatico)
+    new_id = max(c.id for c in db_creations) + 1 if db_creations else 1
+
+    # 2. Crea un oggetto Creation completo, unendo l'ID generato ai dati ricevuti
+    new_creation = Creation(id=new_id, **creation_data.model_dump())
+
+    # 3. Aggiungi il nuovo oggetto alla nostra lista in memoria
+    db_creations.append(new_creation)
+
+    # 4. Restituisci l'oggetto appena creato
+    return new_creation
