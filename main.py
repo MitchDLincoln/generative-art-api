@@ -1,4 +1,5 @@
-from fastapi import FastAPI, status 
+from fastapi import FastAPI, status, HTTPException
+
 from typing import List
 
 # Importiamo il nostro nuovo modello dal file models.py
@@ -63,3 +64,24 @@ def create_creation(creation_data: CreationCreate):
 
     # 4. Restituisci l'oggetto appena creato
     return new_creation
+
+@app.delete("/api/creations/{creation_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_creation(creation_id: int):
+    """
+    Trova una creazione tramite il suo ID e la elimina dal database (finto).
+    """
+    # Cerca nella nostra lista la creazione con l'ID corrispondente.
+    # `next` si ferma al primo risultato trovato.
+    creation_to_delete = next((c for c in db_creations if c.id == creation_id), None)
+
+    # Se 'next' non trova nulla, restituisce None. In questo caso...
+    if creation_to_delete is None:
+        # ...solleviamo un'eccezione HTTP che FastAPI convertirà in una risposta 404.
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Creation with id {creation_id} not found")
+
+    # Se l'abbiamo trovata, la rimuoviamo dalla lista.
+    db_creations.remove(creation_to_delete)
+
+    # Restituiamo una risposta vuota con status code 204.
+    return
