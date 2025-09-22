@@ -85,3 +85,27 @@ def delete_creation(creation_id: int):
 
     # Restituiamo una risposta vuota con status code 204.
     return
+
+@app.put("/api/creations/{creation_id}", response_model=Creation)
+def update_creation(creation_id: int, creation_data: CreationCreate):
+    """
+    Trova una creazione tramite ID e aggiorna i suoi dati con quelli forniti.
+    """
+    # 1. Trova l'indice della creazione da aggiornare.
+    # Usiamo l'indice invece dell'oggetto per poterlo poi sostituire nella lista.
+    index_to_update = next((i for i, c in enumerate(db_creations) if c.id == creation_id), None)
+
+    # 2. Se l'indice non viene trovato, solleva un errore 404.
+    if index_to_update is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Creation with id {creation_id} not found")
+
+    # 3. Crea un nuovo oggetto Creation con i dati aggiornati.
+    # Manteniamo l'ID originale e usiamo i nuovi dati dal body della richiesta.
+    updated_creation = Creation(id=creation_id, **creation_data.model_dump())
+
+    # 4. Sostituisci il vecchio oggetto nella lista con quello nuovo.
+    db_creations[index_to_update] = updated_creation
+
+    # 5. Restituisci l'oggetto aggiornato.
+    return updated_creation
